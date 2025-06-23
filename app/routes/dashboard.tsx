@@ -4,7 +4,8 @@ export default function Dashboard() {
   return (
     <div>
       {" "}
-      Welcome to the dashboard page! <Outlet />
+      <div className="bg-black h-12">MAIN MENU</div>
+      <Outlet />
     </div>
   );
 }

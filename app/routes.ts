@@ -10,5 +10,5 @@ export default [
   route("about", "routes/about.tsx"),
   route("post/:postId", "routes/post.tsx"),
 
-  layout("routes/dashboard.tsx", [route("about", "routes/about.tsx")]),
+  layout("routes/dashboard.tsx", [route("profile", "routes/profile.tsx")]),
 ] satisfies RouteConfig;
