@@ -1,0 +1,19 @@
+.submenu li {
+  font-weight: 600;
+  background: linear-gradient(
+    to right,
+    rgb(204, 17, 3),
+    rgb(204, 17, 3),
+    50%,
+    white 50%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+  background-position: 100%;
+  transition: background-position 275ms ease;
+}
+.submenu li:hover {
+  background-position: 0 100%;
+}
