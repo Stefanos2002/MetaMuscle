@@ -6,9 +6,9 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  index("routes/home.tsx"),
-  route("about", "routes/about.tsx"),
-  route("post/:postId", "routes/post.tsx"),
-
-  layout("routes/dashboard.tsx", [route("profile", "routes/profile.tsx")]),
+  layout("routes/navbar.tsx", [
+    index("routes/home.tsx"),
+    route("about", "routes/about.tsx"),
+    route("post/:postId", "routes/post.tsx"),
+  ]),
 ] satisfies RouteConfig;
