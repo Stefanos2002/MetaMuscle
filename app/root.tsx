@@ -38,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Quintessential&display=swap"
+          href="https://fonts.googleapis.com/css2?family=TASA+Explorer:wght@400..800&family=Zalando+Sans+Expanded:ital,wght@0,796;1,796&display=swap"
           rel="stylesheet"
         />
       </head>

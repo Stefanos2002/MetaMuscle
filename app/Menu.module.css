@@ -12,8 +12,9 @@
   -webkit-text-fill-color: transparent;
   background-size: 200% 100%;
   background-position: 100%;
-  transition: background-position 275ms ease;
+  transition: background-position 275ms ease, transform 200ms ease-in-out;
 }
 .submenu li:hover {
   background-position: 0 100%;
+  transform: scale(1.05);
 }

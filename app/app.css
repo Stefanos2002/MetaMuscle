@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
 body {
-  font-family: "Quintessential", sans-serif;
+  font-family: "TASA Explorer", sans-serif;
+  font-weight: 500;
 }
