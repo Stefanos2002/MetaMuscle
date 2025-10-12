@@ -7,7 +7,6 @@ import {
 
 export default [
   layout("routes/layout.tsx", [
-    // layout("routes/navbar.tsx", [
     index("routes/home.tsx"),
     route("about", "routes/about.tsx"),
     route("contact", "routes/contact.tsx"),
@@ -20,6 +19,5 @@ export default [
       route("mass-gainers", "routes/shop/mass-gainers.tsx"),
       route("pre-post-workout", "routes/shop/pre-post-workout.tsx"),
     ]),
-    // ]),
   ]),
 ] satisfies RouteConfig;
