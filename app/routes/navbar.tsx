@@ -3,8 +3,8 @@ import { Link, Outlet } from "react-router";
 
 export default function Navbar() {
   return (
-    <div className="relative h-screen w-full">
-      <div className="w-full h-auto bg-black">
+    <>
+      <div className="relative w-full bg-black">
         <nav className="flex items-center h-auto  justify-around">
           <div className="flex items-center">
             <img
@@ -54,7 +54,7 @@ export default function Navbar() {
         </nav>
       </div>
       {/* this is neccessary for the page to work */}
-      <Outlet />
-    </div>
+      {/* <Outlet /> */}
+    </>
   );
 }

@@ -7,22 +7,19 @@ import {
 
 export default [
   layout("routes/layout.tsx", [
-    index("routes/layout.tsx"),
-    layout("routes/navbar.tsx", [
-      route("about", "routes/about.tsx"),
-      route("contact", "routes/contact.tsx"),
-      route("post/:postId", "routes/post.tsx"),
+    // layout("routes/navbar.tsx", [
+    index("routes/home.tsx"),
+    route("about", "routes/about.tsx"),
+    route("contact", "routes/contact.tsx"),
+    route("post/:postId", "routes/post.tsx"),
 
-      layout("routes/shop/layout.tsx", [
-        route("all-products", "routes/shop/all-products.tsx"),
-        route("whey-protein", "routes/shop/whey-protein.tsx"),
-        route("plant-based", "routes/shop/plant-based.tsx"),
-        route("mass-gainers", "routes/shop/mass-gainers.tsx"),
-        route("pre-post-workout", "routes/shop/pre-post-workout.tsx"),
-      ]),
+    layout("routes/shop/layout.tsx", [
+      route("all-products", "routes/shop/all-products.tsx"),
+      route("whey-protein", "routes/shop/whey-protein.tsx"),
+      route("plant-based", "routes/shop/plant-based.tsx"),
+      route("mass-gainers", "routes/shop/mass-gainers.tsx"),
+      route("pre-post-workout", "routes/shop/pre-post-workout.tsx"),
     ]),
-    layout("routes/home/layout.tsx", [
-      route("banner", "routes/home/banner.tsx"),
-    ]),
+    // ]),
   ]),
 ] satisfies RouteConfig;

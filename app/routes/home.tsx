@@ -1,4 +1,5 @@
 import type { Route } from "./+types/home";
+import Banner from "./banner";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -8,5 +9,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return <div className="h-full text-xl font-bold">This is the home page</div>;
+  return (
+    <div className="w-full">
+      <Banner />
+    </div>
+  );
 }
