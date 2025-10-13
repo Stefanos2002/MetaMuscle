@@ -1,4 +1,6 @@
 //line 287 vec4 changing img plain background
+//line 402 changing img width/height
+//line 143 changing text width/height
 import {
   Camera,
   Mesh,
@@ -41,28 +43,56 @@ function getFontSize(font: string): number {
 function createTextTexture(
   gl: GL,
   text: string,
-  font: string = "bold 30px monospace",
-  color: string = "black"
+  font: string = "bold 30px Figtree",
+  color: string = "black",
+  fixedWidth: number = 530 // fixed canvas width for text (≈ image width)
 ): { texture: Texture; width: number; height: number } {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Could not get 2d context");
 
+  // --- Fixed font and color ---
   context.font = font;
-  const metrics = context.measureText(text);
-  const textWidth = Math.ceil(metrics.width);
+  context.fillStyle = color;
   const fontSize = getFontSize(font);
-  const textHeight = Math.ceil(fontSize * 1.2);
 
-  canvas.width = textWidth + 20;
-  canvas.height = textHeight + 20;
+  // --- Word wrapping (centered) ---
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const testLine = currentLine + " " + words[i];
+    const testWidth = context.measureText(testLine).width;
+    if (testWidth > fixedWidth) {
+      lines.push(currentLine);
+      currentLine = words[i];
+    } else {
+      currentLine = testLine;
+    }
+  }
+  lines.push(currentLine);
+
+  const lineHeight = fontSize * 1.4;
+  const textHeight = lineHeight * lines.length;
+
+  // --- Fixed width canvas, auto height ---
+  canvas.width = fixedWidth;
+  canvas.height = Math.ceil(textHeight + 20);
 
   context.font = font;
   context.fillStyle = color;
-  context.textBaseline = "middle";
   context.textAlign = "center";
+  context.textBaseline = "middle";
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillText(text, canvas.width / 2, canvas.height / 2);
+
+  // --- Draw centered lines ---
+  const centerX = canvas.width / 2;
+  const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+  lines.forEach((line, i) => {
+    context.fillText(line, centerX, startY + i * lineHeight);
+  });
 
   const texture = new Texture(gl, { generateMipmaps: false });
   texture.image = canvas;
@@ -139,9 +169,13 @@ class Title {
       transparent: true,
     });
     this.mesh = new Mesh(this.gl, { geometry, program });
+
     const aspect = width / height;
-    const textHeightScaled = this.plane.scale.y * 0.15;
-    const textWidthScaled = textHeightScaled * aspect;
+
+    // Text should roughly match the image width (90% of plane width)
+    const textWidthScaled = this.plane.scale.x * 0.9;
+    const textHeightScaled = textWidthScaled / aspect;
+
     this.mesh.scale.set(textWidthScaled, textHeightScaled, 1);
     this.mesh.position.y =
       -this.plane.scale.y * 0.5 - textHeightScaled * 0.5 - 0.05;
@@ -401,9 +435,9 @@ class Media {
     }
     this.scale = this.screen.height / 1500;
     this.plane.scale.y =
-      (this.viewport.height * (900 * this.scale)) / this.screen.height;
+      (this.viewport.height * (500 * this.scale)) / this.screen.height;
     this.plane.scale.x =
-      (this.viewport.width * (700 * this.scale)) / this.screen.width;
+      (this.viewport.width * (500 * this.scale)) / this.screen.width;
     this.plane.program.uniforms.uPlaneSizes.value = [
       this.plane.scale.x,
       this.plane.scale.y,
@@ -524,8 +558,8 @@ class App {
         text: "100% Whey Gold Standard - Optimum Nutrition",
       },
       {
-        image: `https://picsum.photos/seed/2/800/600?grayscale`,
-        text: "Desk Setup",
+        image: `https://www.bodyclub.gr/image/cache/catalog/Products/GoldTouch_Nutrition/GoldTouch-Nutrition-Iso-Touch-86percent-Protein-2000gr-1200x1200.png`,
+        text: "GoldTouch Premium ISO TOUCH 86% ",
       },
       {
         image: `https://picsum.photos/seed/3/800/600?grayscale`,
