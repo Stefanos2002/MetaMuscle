@@ -12,7 +12,7 @@ export default [
     route("contact", "routes/contact.tsx"),
     route("post/:postId", "routes/post.tsx"),
 
-    layout("routes/shop/layout.tsx", [
+    route("shop", "routes/shop/layout.tsx", [
       route("all-products", "routes/shop/all-products.tsx"),
       route("whey-protein", "routes/shop/whey-protein.tsx"),
       route("plant-based", "routes/shop/plant-based.tsx"),

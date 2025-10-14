@@ -554,52 +554,52 @@ class App {
   ) {
     const defaultItems = [
       {
-        image: `https://gymbeam.gr/media/catalog/product/cache/70f742f66feec18cb83790f14444a3d1/e/u/eu_gsw_salted_caramel_5lb_6071740_fr.png`,
+        image: `/images/products/proteins/goldstandard.webp`,
         text: "100% Whey Gold Standard - Optimum Nutrition",
       },
       {
-        image: `https://www.bodyclub.gr/image/cache/catalog/Products/GoldTouch_Nutrition/GoldTouch-Nutrition-Iso-Touch-86percent-Protein-2000gr-1200x1200.png`,
+        image: `/images/products/proteins/goldtouch.png`,
         text: "GoldTouch Premium ISO TOUCH 86% ",
       },
       {
-        image: `https://picsum.photos/seed/3/800/600?grayscale`,
-        text: "Waterfall",
+        image: `/images/products/proteins/isohydrolized.webp`,
+        text: "Iso 100 Hydrolyzed - Dymatize",
       },
       {
-        image: `https://picsum.photos/seed/4/800/600?grayscale`,
-        text: "Strawberries",
+        image: `/images/products/plant-based/bioraw.png`,
+        text: "BIO Raw 100% Organic Hemp Protein - Chemp",
       },
       {
-        image: `https://picsum.photos/seed/5/800/600?grayscale`,
-        text: "Deep Diving",
+        image: `/images/products/plant-based/100%_vegan.png`,
+        text: "100% Vegan Protein - Scitec Nutrition",
       },
       {
-        image: `https://picsum.photos/seed/16/800/600?grayscale`,
-        text: "Train Track",
+        image: `/images/products/plant-based/plantprotein.png`,
+        text: "Plant Protein - PER4M Nutrition",
       },
       {
-        image: `https://picsum.photos/seed/17/800/600?grayscale`,
-        text: "Santorini",
+        image: `/images/products/mass-gainers/metamorphosis.png`,
+        text: "Metamorphosis All in 1 Protein Formula - GoldTouch - Nutrition",
       },
       {
-        image: `https://picsum.photos/seed/8/800/600?grayscale`,
-        text: "Blurry Lights",
+        image: `/images/products/mass-gainers/gamechangermass.png`,
+        text: "Game Changer Mass - DY Nutrition",
       },
       {
-        image: `https://picsum.photos/seed/9/800/600?grayscale`,
-        text: "New York",
+        image: `/images/products/mass-gainers/hypermass.png`,
+        text: "Hyper Mass - Biotech USA",
       },
       {
-        image: `https://picsum.photos/seed/10/800/600?grayscale`,
-        text: "Good Boy",
+        image: `/images/products/pre-workout/pre-jnx.png`,
+        text: "The Curse! Pre-Workout - JNX Sports",
       },
       {
-        image: `https://picsum.photos/seed/21/800/600?grayscale`,
-        text: "Coastline",
+        image: `/images/products/pre-workout/pre-goldstandard.png`,
+        text: "Gold Standard Pre-Workout - Optimum Nutrition",
       },
       {
-        image: `https://picsum.photos/seed/12/800/600?grayscale`,
-        text: "Palm Trees",
+        image: `/images/products/pre-workout/pre-citrulline.png`,
+        text: "Citrulline Malate - Biotech USA",
       },
     ];
     const galleryItems = items && items.length ? items : defaultItems;

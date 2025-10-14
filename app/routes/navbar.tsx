@@ -4,11 +4,11 @@ import { Link, Outlet } from "react-router";
 export default function Navbar() {
   return (
     <>
-      <div className="relative w-full bg-black">
+      <div className="absolute z-20 w-full bg-transparent">
         <nav className="flex items-center h-auto  justify-around">
           <div className="flex items-center">
             <img
-              src={`images/logo/page_logo.png`}
+              src={`/images/logo/page_logo.png`}
               alt="Meta-Muscle Logo"
               className="h-24 w-24 object-contain translate-y-[10px] translate-x-[16px]"
             ></img>
@@ -27,19 +27,19 @@ export default function Navbar() {
                 className={`${styles.submenu} absolute mt-2 -left-16 hidden group-hover:flex flex-col items-center bg-black text-white border-2 border-gray-200 rounded-lg shadow-lg z-50 p-3 space-y-1 w-max`}
               >
                 <li>
-                  <Link to="/all-products">All Products</Link>
+                  <Link to="/shop/all-products">All Products</Link>
                 </li>
                 <li>
-                  <Link to="/whey-protein">Whey Protein</Link>
+                  <Link to="/shop/whey-protein">Whey Protein</Link>
                 </li>
                 <li>
-                  <Link to="/plant-based">Plant Based</Link>
+                  <Link to="/shop/plant-based">Plant Based</Link>
                 </li>
                 <li>
-                  <Link to="/mass-gainers">Mass Gainers</Link>
+                  <Link to="/shop/mass-gainers">Mass Gainers</Link>
                 </li>
                 <li>
-                  <Link to="/pre-post-workout">Pre/Post Workout</Link>
+                  <Link to="/shop/pre-post-workout">Pre/Post Workout</Link>
                 </li>
               </ul>
             </li>
