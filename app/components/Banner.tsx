@@ -15,11 +15,11 @@ export default function Banner() {
         distortion={0.05}
         className="absolute inset-0 z-0 bg-gradient-to-b from-[#0b0b14] to-[#000000]"
       />
-      <div className="absolute pt-12 inset-0 z-10 flex items-center justify-center">
+      <div className="absolute inset-0 z-10 flex items-center justify-center">
         <CircularGallery
-          font="bold 44px sans-serif"
-          bend={3.5}
-          textColor="#fff"
+          font="bold 58px montserrat"
+          bend={4}
+          textColor="#e8e8e8"
           borderRadius={0.05}
           scrollEase={0.02}
         />

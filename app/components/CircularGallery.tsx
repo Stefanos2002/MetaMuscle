@@ -43,9 +43,10 @@ function getFontSize(font: string): number {
 function createTextTexture(
   gl: GL,
   text: string,
-  font: string = "bold 30px Figtree",
+  font: string = "bold 30px Montserrat",
   color: string = "black",
-  fixedWidth: number = 530 // fixed canvas width for text (≈ image width)
+  fixedWidth: number = 430 // fixed canvas width for text (≈ image width)
+  // fontWeight: string | number = "bold" // NEW param
 ): { texture: Texture; width: number; height: number } {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
@@ -53,8 +54,9 @@ function createTextTexture(
 
   // --- Fixed font and color ---
   context.font = font;
-  context.fillStyle = color;
   const fontSize = getFontSize(font);
+  // context.font = `${fontWeight} ${fontSize}px ${font}`;
+  context.fillStyle = color;
 
   // --- Word wrapping (centered) ---
   const words = text.split(" ");
@@ -73,7 +75,7 @@ function createTextTexture(
   }
   lines.push(currentLine);
 
-  const lineHeight = fontSize * 1.4;
+  const lineHeight = fontSize * 1.8;
   const textHeight = lineHeight * lines.length;
 
   // --- Fixed width canvas, auto height ---
@@ -106,6 +108,8 @@ interface TitleProps {
   text: string;
   textColor?: string;
   font?: string;
+  textWidth?: number;
+  fontWeight?: number;
 }
 
 class Title {
@@ -114,6 +118,8 @@ class Title {
   renderer: Renderer;
   text: string;
   textColor: string;
+  textWidth?: number;
+  fontWeight?: number;
   font: string;
   mesh!: Mesh;
 
@@ -123,7 +129,7 @@ class Title {
     renderer,
     text,
     textColor = "#545050",
-    font = "30px sans-serif",
+    font = "30px monospace",
   }: TitleProps) {
     autoBind(this);
     this.gl = gl;
@@ -140,7 +146,8 @@ class Title {
       this.gl,
       this.text,
       this.font,
-      this.textColor
+      this.textColor,
+      this.textWidth ?? 630
     );
     const geometry = new Plane(this.gl);
     const program = new Program(this.gl, {
@@ -371,6 +378,8 @@ class Media {
       text: this.text,
       textColor: this.textColor,
       font: this.font,
+      // fontWeight: 800,
+      // textWidth: 400,
     });
   }
 
@@ -435,14 +444,14 @@ class Media {
     }
     this.scale = this.screen.height / 1500;
     this.plane.scale.y =
-      (this.viewport.height * (500 * this.scale)) / this.screen.height;
+      (this.viewport.height * (300 * this.scale)) / this.screen.height;
     this.plane.scale.x =
-      (this.viewport.width * (500 * this.scale)) / this.screen.width;
+      (this.viewport.width * (300 * this.scale)) / this.screen.width;
     this.plane.program.uniforms.uPlaneSizes.value = [
       this.plane.scale.x,
       this.plane.scale.y,
     ];
-    this.padding = 2;
+    this.padding = 3;
     this.width = this.plane.scale.x + this.padding;
     this.widthTotal = this.width * this.length;
     this.x = this.width * this.index;
@@ -497,7 +506,7 @@ class App {
       bend = 1,
       textColor = "#ffffff",
       borderRadius = 0,
-      font = "bold 30px Figtree",
+      font = "bold 30px Montserrat",
       scrollSpeed = 2,
       scrollEase = 0.05,
     }: AppConfig
@@ -774,7 +783,7 @@ export default function CircularGallery({
   }, [items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase]);
   return (
     <div
-      className="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing"
+      className="gallery w-full h-full overflow-hidden cursor-grab active:cursor-grabbing"
       ref={containerRef}
     />
   );
