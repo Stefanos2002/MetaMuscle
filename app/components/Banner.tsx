@@ -15,6 +15,11 @@ export default function Banner() {
         distortion={0.05}
         className="absolute inset-0 z-0 bg-gradient-to-b from-[#0b0b14] to-[#000000]"
       />
+
+      <header className="text-white text-3xl h-10 flex mt-44 justify-center inset-0 absolute z-10">
+        Choose Between Best Quality Products
+      </header>
+
       <div className="absolute inset-0 z-10 flex items-center justify-center">
         <CircularGallery
           font="bold 58px montserrat"
