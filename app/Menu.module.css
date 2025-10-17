@@ -1,9 +1,10 @@
 .submenu li {
+  font-size: 18px;
   font-weight: 600;
   background: linear-gradient(
     to right,
-    rgb(204, 17, 3),
-    rgb(204, 17, 3),
+    rgb(204, 171, 3),
+    rgb(204, 171, 3),
     50%,
     white 50%
   );

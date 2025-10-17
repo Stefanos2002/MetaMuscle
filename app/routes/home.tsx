@@ -1,5 +1,5 @@
 import type { Route } from "./+types/home";
-import Banner from "~/components/banner";
+import Banner from "~/components/Banner";
 
 export function meta({}: Route.MetaArgs) {
   return [

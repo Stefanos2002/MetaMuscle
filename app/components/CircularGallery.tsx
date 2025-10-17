@@ -44,8 +44,7 @@ function createTextTexture(
   gl: GL,
   text: string,
   font: string = "bold 30px Montserrat",
-  color: string = "black",
-  fixedWidth: number = 430 // fixed canvas width for text (≈ image width)
+  color: string = "black"
   // fontWeight: string | number = "bold" // NEW param
 ): { texture: Texture; width: number; height: number } {
   const canvas = document.createElement("canvas");
@@ -59,21 +58,48 @@ function createTextTexture(
   context.fillStyle = color;
 
   // --- Word wrapping (centered) ---
-  const words = text.split(" ");
-  const lines: string[] = [];
-  let currentLine = words[0];
+  // const words = text.split(" ");
+  // const lines: string[] = [];
+  // let currentLine = words[0];
 
-  for (let i = 1; i < words.length; i++) {
-    const testLine = currentLine + " " + words[i];
-    const testWidth = context.measureText(testLine).width;
-    if (testWidth > fixedWidth) {
-      lines.push(currentLine);
-      currentLine = words[i];
-    } else {
-      currentLine = testLine;
+  // for (let i = 1; i < words.length; i++) {
+  //   const testLine = currentLine + " " + words[i];
+  //   const testWidth = context.measureText(testLine).width;
+  //   if (testWidth > fixedWidth) {
+  //     lines.push(currentLine);
+  //     currentLine = words[i];
+  //   } else {
+  //     currentLine = testLine;
+  //   }
+  // }
+  // lines.push(currentLine);
+  let fixedWidth = 630; // start width
+  let lines: string[] = [];
+
+  const measureLines = (width: number) => {
+    const w = text.split(" ");
+    const l: string[] = [];
+    let cl = w[0];
+    for (let i = 1; i < w.length; i++) {
+      const tl = cl + " " + w[i];
+      const tw = context.measureText(tl).width;
+      if (tw > width) {
+        l.push(cl);
+        cl = w[i];
+      } else {
+        cl = tl;
+      }
     }
-  }
-  lines.push(currentLine);
+    l.push(cl);
+    return l;
+  };
+
+  // 🔧 Find a width that keeps text ≤ 3 lines
+  do {
+    lines = measureLines(fixedWidth);
+    if (lines.length > 3) fixedWidth += 50; // widen text area
+    else break;
+  } while (fixedWidth < 1200);
 
   const lineHeight = fontSize * 1.8;
   const textHeight = lineHeight * lines.length;
@@ -146,8 +172,7 @@ class Title {
       this.gl,
       this.text,
       this.font,
-      this.textColor,
-      this.textWidth ?? 630
+      this.textColor
     );
     const geometry = new Plane(this.gl);
     const program = new Program(this.gl, {
@@ -180,7 +205,7 @@ class Title {
     const aspect = width / height;
 
     // Text should roughly match the image width (90% of plane width)
-    const textWidthScaled = this.plane.scale.x * 0.9;
+    const textWidthScaled = this.plane.scale.x * 1;
     const textHeightScaled = textWidthScaled / aspect;
 
     this.mesh.scale.set(textWidthScaled, textHeightScaled, 1);
@@ -244,6 +269,9 @@ class Media {
   speed: number = 0;
   isBefore: boolean = false;
   isAfter: boolean = false;
+  isHovered: boolean = false;
+  baseScaleX!: number;
+  baseScaleY!: number;
 
   constructor({
     geometry,
@@ -355,6 +383,7 @@ class Media {
     img.src = this.image;
     img.onload = () => {
       texture.image = img;
+      texture.needsUpdate = true;
       this.program.uniforms.uImageSizes.value = [
         img.naturalWidth,
         img.naturalHeight,
@@ -469,6 +498,7 @@ interface AppConfig {
 }
 
 class App {
+  mouse = { x: 0, y: 0 };
   container: HTMLElement;
   scrollSpeed: number;
   scroll: {
@@ -506,7 +536,7 @@ class App {
       bend = 1,
       textColor = "#ffffff",
       borderRadius = 0,
-      font = "bold 30px Montserrat",
+      font = "bold 50px Montserrat",
       scrollSpeed = 2,
       scrollEase = 0.05,
     }: AppConfig
@@ -670,6 +700,54 @@ class App {
     this.scroll.target = this.scroll.target < 0 ? -item : item;
   }
 
+  getWorldPosition(mesh: Mesh): [number, number, number] {
+    const worldMatrix = mesh.worldMatrix; // mat4
+    // position is in the last column of the 4x4 matrix
+    return [worldMatrix[12], worldMatrix[13], worldMatrix[14]];
+  }
+
+  // checkHover() {
+  //   let hovered = false;
+  //   this.medias.forEach((media) => {
+  //     const plane = media.plane;
+
+  //     // Convert plane position to screen space
+  //     const [wx, wy] = this.getWorldPosition(plane); // ignore z if you like
+  //     // project to screen space
+  //     const vector = { x: wx, y: wy };
+  //     // const ndcX = (vector.x / this.viewport.width) * 2 - 1;
+  //     // const ndcY = -(vector.y / this.viewport.height) * 2 + 1;
+  //     const sx = ((vector.x + 1) / 2) * window.innerWidth;
+  //     const sy = ((-vector.y + 1) / 2) * window.innerHeight;
+
+  //     const width =
+  //       (plane.scale.x * this.renderer.gl.canvas.width) / this.viewport.width;
+  //     const height =
+  //       (plane.scale.y * this.renderer.gl.canvas.height) / this.viewport.height;
+
+  //     if (
+  //       this.mouse.x * window.innerWidth > sx - width / 2 &&
+  //       this.mouse.x * window.innerWidth < sx + width / 2 &&
+  //       this.mouse.y * window.innerHeight > sy - height / 2 &&
+  //       this.mouse.y * window.innerHeight < sy + height / 2
+  //     ) {
+  //       // Hovering
+  //       plane.scale.set(
+  //         media.plane.scale.x * 1.1,
+  //         media.plane.scale.y * 1.1,
+  //         1
+  //       );
+  //       hovered = true;
+  //     } else {
+  //       // Reset
+  //       plane.scale.set(media.plane.scale.x, media.plane.scale.y, 1);
+  //     }
+  //   });
+
+  //   // Change cursor
+  //   this.container.style.cursor = hovered ? "pointer" : "grab";
+  // }
+
   onResize() {
     this.screen = {
       width: this.container.clientWidth,
@@ -683,14 +761,42 @@ class App {
     const height = 2 * Math.tan(fov / 2) * this.camera.position.z;
     const width = height * this.camera.aspect;
     this.viewport = { width, height };
+
     if (this.medias) {
-      this.medias.forEach((media) =>
-        media.onResize({ screen: this.screen, viewport: this.viewport })
-      );
+      this.medias.forEach((media) => {
+        media.onResize({ screen: this.screen, viewport: this.viewport });
+
+        // store the original scale for hover lerp
+        media.baseScaleX = media.plane.scale.x;
+        media.baseScaleY = media.plane.scale.y;
+      });
     }
   }
 
   update() {
+    // Step 2: hover detection
+    let hovering = false;
+    this.medias.forEach((media) => {
+      // Convert plane position to normalized screen space
+      const planeX = media.plane.position.x / (this.viewport.width / 2);
+      const planeY = media.plane.position.y / (this.viewport.height / 2);
+
+      const halfWidth = media.plane.scale.x / this.viewport.width / 2;
+      const halfHeight = media.plane.scale.y / this.viewport.height / 2;
+
+      media.isHovered =
+        this.mouse.x > planeX - halfWidth &&
+        this.mouse.x < planeX + halfWidth &&
+        this.mouse.y > planeY - halfHeight &&
+        this.mouse.y < planeY + halfHeight;
+
+      if (media.isHovered) hovering = true;
+    });
+
+    // Change cursor style
+    this.container.style.cursor = hovering ? "pointer" : "grab";
+
+    // --- original scroll/render ---
     this.scroll.current = lerp(
       this.scroll.current,
       this.scroll.target,
@@ -720,6 +826,15 @@ class App {
     window.addEventListener("touchstart", this.boundOnTouchDown);
     window.addEventListener("touchmove", this.boundOnTouchMove);
     window.addEventListener("touchend", this.boundOnTouchUp);
+
+    //image scaling
+    window.addEventListener("mousemove", (e) => {
+      const rect = this.renderer.gl.canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      this.mouse.x = (mx / rect.width) * 2 - 1; // normalized device coordinates
+      this.mouse.y = -((my / rect.height) * 2 - 1);
+    });
   }
 
   destroy() {

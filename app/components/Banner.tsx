@@ -1,5 +1,6 @@
 import CircularGallery from "./CircularGallery";
 import LightRays from "./LightRays";
+import TextType from "./TextType";
 export default function Banner() {
   return (
     <div className="h-full relative">
@@ -15,14 +16,22 @@ export default function Banner() {
         distortion={0.05}
         className="absolute inset-0 z-0 bg-gradient-to-b from-[#0b0b14] to-[#000000]"
       />
-
       <header className="text-white text-3xl h-10 flex mt-44 justify-center inset-0 absolute z-10">
-        Choose Between Best Quality Products
+        <TextType
+          text={["Choose Between Best Quality Products"]}
+          typingSpeed={75}
+          pauseDuration={1500}
+          showCursor={true}
+          cursorCharacter="|"
+        />
       </header>
+      {/* <header className="text-white text-3xl h-10 flex mt-44 justify-center inset-0 absolute z-10">
+        Choose Between Best Quality Products
+      </header> */}
 
       <div className="absolute inset-0 z-10 flex items-center justify-center">
         <CircularGallery
-          font="bold 58px montserrat"
+          font="bold 60px montserrat"
           bend={4}
           textColor="#e8e8e8"
           borderRadius={0.05}
