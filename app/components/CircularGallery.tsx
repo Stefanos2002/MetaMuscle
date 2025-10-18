@@ -242,6 +242,61 @@ interface MediaProps {
   font?: string;
 }
 
+class QuickView {
+  gl: GL;
+  parent: Mesh;
+  mesh!: Mesh;
+  text: string;
+  constructor(gl: GL, parent: Mesh, text = "Quick View") {
+    this.gl = gl;
+    this.parent = parent;
+    this.text = text;
+    this.createMesh();
+  }
+
+  createMesh() {
+    const geometry = new Plane(this.gl, { width: 1, height: 0.2 });
+    const program = new Program(this.gl, {
+      vertex: `
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragment: `
+        precision highp float;
+        uniform float uAlpha;
+        varying vec2 vUv;
+        void main() {
+          vec3 color = vec3(0.0, 0.7, 1.0); // cyan-ish highlight
+          gl_FragColor = vec4(color, uAlpha);
+        }
+      `,
+      uniforms: { uAlpha: { value: 0.0 } },
+      transparent: true,
+    });
+    this.mesh = new Mesh(this.gl, { geometry, program });
+    this.mesh.position.y = -0.4; // bottom of parent plane
+    this.mesh.scale.x = 1; // match parent width
+    this.mesh.position.z = 0.01;
+    this.mesh.setParent(this.parent);
+  }
+
+  show(show: boolean) {
+    const targetAlpha = show ? 1.0 : 0.0;
+    this.mesh.program.uniforms.uAlpha.value = lerp(
+      this.mesh.program.uniforms.uAlpha.value,
+      targetAlpha,
+      0.1
+    );
+  }
+}
+
 class Media {
   extra: number = 0;
   geometry: Plane;
@@ -272,6 +327,10 @@ class Media {
   isHovered: boolean = false;
   baseScaleX!: number;
   baseScaleY!: number;
+  quickView!: QuickView;
+  createQuickView() {
+    this.quickView = new QuickView(this.gl, this.plane, "Quick View");
+  }
 
   constructor({
     geometry,
@@ -307,6 +366,7 @@ class Media {
     this.createMesh();
     this.createTitle();
     this.onResize();
+    this.createQuickView();
   }
 
   createShader() {
@@ -776,26 +836,81 @@ class App {
   update() {
     // Step 2: hover detection
     let hovering = false;
-    this.medias.forEach((media) => {
-      // Convert plane position to normalized screen space
-      const planeX = media.plane.position.x / (this.viewport.width / 2);
-      const planeY = media.plane.position.y / (this.viewport.height / 2);
 
-      const halfWidth = media.plane.scale.x / this.viewport.width / 2;
-      const halfHeight = media.plane.scale.y / this.viewport.height / 2;
+    if (this.medias) {
+      const canvasRect = this.renderer.gl.canvas.getBoundingClientRect();
+      const canvasW = canvasRect.width;
+      const canvasH = canvasRect.height;
 
-      media.isHovered =
-        this.mouse.x > planeX - halfWidth &&
-        this.mouse.x < planeX + halfWidth &&
-        this.mouse.y > planeY - halfHeight &&
-        this.mouse.y < planeY + halfHeight;
+      this.medias.forEach((media) => {
+        const m = media.plane.worldMatrix;
+        const hx = 0.5;
+        const hy = 0.5;
 
-      if (media.isHovered) hovering = true;
-    });
+        // Define all 4 local corners of the plane
+        const corners = [
+          [-hx, -hy],
+          [hx, -hy],
+          [hx, hy],
+          [-hx, hy],
+        ];
 
-    // Change cursor style
+        const screenXs: number[] = [];
+        const screenYs: number[] = [];
+
+        // Convert each corner to screen space
+        corners.forEach(([lx, ly]) => {
+          const worldX = m[0] * lx + m[4] * ly + m[12];
+          const worldY = m[1] * lx + m[5] * ly + m[13];
+
+          const screenX = (worldX / this.viewport.width + 0.5) * canvasW;
+          const screenY = (-worldY / this.viewport.height + 0.5) * canvasH;
+
+          screenXs.push(screenX);
+          screenYs.push(screenY);
+        });
+
+        // Get 2D bounding box of the projected corners
+        const minX = Math.min(...screenXs);
+        const maxX = Math.max(...screenXs);
+        const minY = Math.min(...screenYs);
+        const maxY = Math.max(...screenYs);
+
+        // Convert mouse to screen pixels
+        const mouseX = ((this.mouse.x + 1) / 2) * canvasW;
+        const mouseY = ((-this.mouse.y + 1) / 2) * canvasH;
+
+        // Check hitbox
+        media.isHovered =
+          mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY;
+
+        media.quickView.show(media.isHovered);
+
+        // Smooth scaling
+        const targetScale = media.isHovered ? 1.1 : 1.0;
+        if (!media.baseScaleX) {
+          media.baseScaleX = media.plane.scale.x;
+          media.baseScaleY = media.plane.scale.y;
+        }
+
+        media.plane.scale.x = lerp(
+          media.plane.scale.x,
+          media.baseScaleX * targetScale,
+          0.1
+        );
+        media.plane.scale.y = lerp(
+          media.plane.scale.y,
+          media.baseScaleY * targetScale,
+          0.1
+        );
+        // --- NEW: text fade animation ---
+
+        if (media.isHovered) hovering = true;
+      });
+    }
+
+    // Cursor
     this.container.style.cursor = hovering ? "pointer" : "grab";
-
     // --- original scroll/render ---
     this.scroll.current = lerp(
       this.scroll.current,
