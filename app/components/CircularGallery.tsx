@@ -245,17 +245,78 @@ interface MediaProps {
 class QuickView {
   gl: GL;
   parent: Mesh;
-  mesh!: Mesh;
-  text: string;
-  constructor(gl: GL, parent: Mesh, text = "Quick View") {
+  barMesh!: Mesh;
+  textMesh!: Mesh;
+  renderer: Renderer;
+
+  constructor(gl: GL, parent: Mesh, renderer: Renderer) {
     this.gl = gl;
     this.parent = parent;
-    this.text = text;
-    this.createMesh();
+    this.renderer = renderer;
+
+    this.createBar();
+    this.createText();
   }
 
-  createMesh() {
-    const geometry = new Plane(this.gl, { width: 1, height: 0.2 });
+  createBar() {
+    const geometry = new Plane(this.gl, { width: 1, height: 0.5 });
+    const program = new Program(this.gl, {
+      vertex: `
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragment: `
+  precision highp float;
+  uniform float uAlpha;
+  varying vec2 vUv;
+
+  // --- Rounded box function ---
+  float roundedBoxSDF(vec2 p, vec2 b, float r) {
+      vec2 d = abs(p) - b;
+      return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0) - r;
+  }
+
+  void main() {
+      vec2 pos = vUv - 0.5;
+      vec2 size = vec2(0.5, 0.075); // half-width/height of the bar
+      float radius = 0.05; // border radius
+
+      float d = roundedBoxSDF(pos, size, radius);
+      float alpha = uAlpha * (1.0 - smoothstep(-0.002, 0.002, d));
+
+      vec3 color = vec3(204.0/255.0, 171.0/255.0, 3.0/255.0); // gold
+      gl_FragColor = vec4(color, alpha);
+  }
+`,
+
+      uniforms: { uAlpha: { value: 0.0 } },
+      transparent: true,
+      depthTest: false,
+    });
+    this.barMesh = new Mesh(this.gl, { geometry, program });
+    this.barMesh.position.y = -0.45; // bottom of parent plane
+    this.barMesh.position.z = 0.01;
+    this.barMesh.setParent(this.parent);
+  }
+
+  createText() {
+    const { texture, width, height } = createTextTexture(
+      this.gl,
+      "Quick View",
+      "bold 60px Montserrat",
+      "#fff"
+    );
+    const geometry = new Plane(this.gl, {
+      width: 1,
+      height: height / width,
+    });
     const program = new Program(this.gl, {
       vertex: `
         attribute vec3 position;
@@ -270,27 +331,35 @@ class QuickView {
       `,
       fragment: `
         precision highp float;
+        uniform sampler2D tMap;
         uniform float uAlpha;
         varying vec2 vUv;
         void main() {
-          vec3 color = vec3(0.0, 0.7, 1.0); // cyan-ish highlight
-          gl_FragColor = vec4(color, uAlpha);
+          vec4 color = texture2D(tMap, vUv);
+          color.a *= uAlpha;
+          if (color.a < 0.01) discard;
+          gl_FragColor = color;
         }
       `,
-      uniforms: { uAlpha: { value: 0.0 } },
+      uniforms: { tMap: { value: texture }, uAlpha: { value: 0.0 } },
       transparent: true,
+      depthTest: false,
     });
-    this.mesh = new Mesh(this.gl, { geometry, program });
-    this.mesh.position.y = -0.4; // bottom of parent plane
-    this.mesh.scale.x = 1; // match parent width
-    this.mesh.position.z = 0.01;
-    this.mesh.setParent(this.parent);
+    this.textMesh = new Mesh(this.gl, { geometry, program });
+    this.textMesh.position.y = -0.45; // same as bar
+    this.textMesh.position.z = 0.02; // slightly above bar
+    this.textMesh.setParent(this.parent);
   }
 
   show(show: boolean) {
     const targetAlpha = show ? 1.0 : 0.0;
-    this.mesh.program.uniforms.uAlpha.value = lerp(
-      this.mesh.program.uniforms.uAlpha.value,
+    this.barMesh.program.uniforms.uAlpha.value = lerp(
+      this.barMesh.program.uniforms.uAlpha.value,
+      targetAlpha,
+      0.1
+    );
+    this.textMesh.program.uniforms.uAlpha.value = lerp(
+      this.textMesh.program.uniforms.uAlpha.value,
       targetAlpha,
       0.1
     );
@@ -329,7 +398,7 @@ class Media {
   baseScaleY!: number;
   quickView!: QuickView;
   createQuickView() {
-    this.quickView = new QuickView(this.gl, this.plane, "Quick View");
+    this.quickView = new QuickView(this.gl, this.plane, this.renderer);
   }
 
   constructor({
