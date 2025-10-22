@@ -9,6 +9,7 @@ import {
   Renderer,
   Texture,
   Transform,
+  RenderTarget,
 } from "ogl";
 import { useEffect, useRef } from "react";
 
@@ -242,129 +243,166 @@ interface MediaProps {
   font?: string;
 }
 
-class QuickView {
-  gl: GL;
-  parent: Mesh;
-  barMesh!: Mesh;
-  textMesh!: Mesh;
-  renderer: Renderer;
+// export class QuickView {
+//   gl: GL;
+//   parent: Mesh;
+//   renderer: Renderer;
+//   blurMesh!: Mesh;
+//   textMesh!: Mesh;
+//   renderTarget!: RenderTarget;
 
-  constructor(gl: GL, parent: Mesh, renderer: Renderer) {
-    this.gl = gl;
-    this.parent = parent;
-    this.renderer = renderer;
+//   constructor(gl: GL, parent: Mesh, renderer: Renderer) {
+//     this.gl = gl;
+//     this.parent = parent;
+//     this.renderer = renderer;
 
-    this.createBar();
-    this.createText();
-  }
+//     this.createBlurEffect();
+//     this.createText();
+//   }
 
-  createBar() {
-    const geometry = new Plane(this.gl, { width: 1, height: 0.5 });
-    const program = new Program(this.gl, {
-      vertex: `
-        attribute vec3 position;
-        attribute vec2 uv;
-        uniform mat4 modelViewMatrix;
-        uniform mat4 projectionMatrix;
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragment: `
-  precision highp float;
-  uniform float uAlpha;
-  varying vec2 vUv;
+//   /** --- 1. Create blur background --- */
+//   createBlurEffect() {
+//     // RenderTarget to capture the gallery background
+//     this.renderTarget = new RenderTarget(this.gl, {
+//       width: this.gl.canvas.width,
+//       height: this.gl.canvas.height,
+//     });
 
-  // --- Rounded box function ---
-  float roundedBoxSDF(vec2 p, vec2 b, float r) {
-      vec2 d = abs(p) - b;
-      return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0) - r;
-  }
+//     // Fullscreen quad to apply blur
+//     const geometry = new Plane(this.gl, { width: 2, height: 2 });
 
-  void main() {
-      vec2 pos = vUv - 0.5;
-      vec2 size = vec2(0.5, 0.075); // half-width/height of the bar
-      float radius = 0.05; // border radius
+//     const blurFragment = /* glsl */ `
+//       precision highp float;
+//       uniform sampler2D tScene;
+//       uniform vec2 uResolution;
+//       uniform float uAlpha;
+//       varying vec2 vUv;
 
-      float d = roundedBoxSDF(pos, size, radius);
-      float alpha = uAlpha * (1.0 - smoothstep(-0.002, 0.002, d));
+//       vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
+//         vec4 color = vec4(0.0);
+//         vec2 off1 = direction * 1.411764705882353 / resolution;
+//         vec2 off2 = direction * 3.2941176470588234 / resolution;
+//         vec2 off3 = direction * 5.176470588235294 / resolution;
+//         color += texture2D(image, uv) * 0.1964825501511404;
+//         color += texture2D(image, uv + off1) * 0.2969069646728344;
+//         color += texture2D(image, uv - off1) * 0.2969069646728344;
+//         color += texture2D(image, uv + off2) * 0.09447039785044732;
+//         color += texture2D(image, uv - off2) * 0.09447039785044732;
+//         color += texture2D(image, uv + off3) * 0.010381362401148057;
+//         color += texture2D(image, uv - off3) * 0.010381362401148057;
+//         return color;
+//       }
 
-      vec3 color = vec3(204.0/255.0, 171.0/255.0, 3.0/255.0); // gold
-      gl_FragColor = vec4(color, alpha);
-  }
-`,
+//       void main() {
+//         vec2 dir1 = vec2(1.0, 0.0);
+//         vec2 dir2 = vec2(0.0, 1.0);
+//         vec4 blurred = 0.5 * (
+//           blur13(tScene, vUv, uResolution, dir1) +
+//           blur13(tScene, vUv, uResolution, dir2)
+//         );
+//         blurred.a *= uAlpha;
+//         gl_FragColor = blurred;
+//       }
+//     `;
 
-      uniforms: { uAlpha: { value: 0.0 } },
-      transparent: true,
-      depthTest: false,
-    });
-    this.barMesh = new Mesh(this.gl, { geometry, program });
-    this.barMesh.position.y = -0.45; // bottom of parent plane
-    this.barMesh.position.z = 0.01;
-    this.barMesh.setParent(this.parent);
-  }
+//     const program = new Program(this.gl, {
+//       vertex: /* glsl */ `
+//         attribute vec3 position;
+//         attribute vec2 uv;
+//         varying vec2 vUv;
+//         void main() {
+//           vUv = uv;
+//           gl_Position = vec4(position, 1.0);
+//         }
+//       `,
+//       fragment: blurFragment,
+//       uniforms: {
+//         tScene: { value: this.renderTarget.texture },
+//         uResolution: { value: [this.gl.canvas.width, this.gl.canvas.height] },
+//         uAlpha: { value: 0.0 },
+//       },
+//       transparent: true,
+//       depthTest: false,
+//     });
 
-  createText() {
-    const { texture, width, height } = createTextTexture(
-      this.gl,
-      "Quick View",
-      "bold 60px Montserrat",
-      "#fff"
-    );
-    const geometry = new Plane(this.gl, {
-      width: 1,
-      height: height / width,
-    });
-    const program = new Program(this.gl, {
-      vertex: `
-        attribute vec3 position;
-        attribute vec2 uv;
-        uniform mat4 modelViewMatrix;
-        uniform mat4 projectionMatrix;
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragment: `
-        precision highp float;
-        uniform sampler2D tMap;
-        uniform float uAlpha;
-        varying vec2 vUv;
-        void main() {
-          vec4 color = texture2D(tMap, vUv);
-          color.a *= uAlpha;
-          if (color.a < 0.01) discard;
-          gl_FragColor = color;
-        }
-      `,
-      uniforms: { tMap: { value: texture }, uAlpha: { value: 0.0 } },
-      transparent: true,
-      depthTest: false,
-    });
-    this.textMesh = new Mesh(this.gl, { geometry, program });
-    this.textMesh.position.y = -0.45; // same as bar
-    this.textMesh.position.z = 0.02; // slightly above bar
-    this.textMesh.setParent(this.parent);
-  }
+//     this.blurMesh = new Mesh(this.gl, { geometry, program });
+//     this.blurMesh.setParent(this.parent);
+//   }
 
-  show(show: boolean) {
-    const targetAlpha = show ? 1.0 : 0.0;
-    this.barMesh.program.uniforms.uAlpha.value = lerp(
-      this.barMesh.program.uniforms.uAlpha.value,
-      targetAlpha,
-      0.1
-    );
-    this.textMesh.program.uniforms.uAlpha.value = lerp(
-      this.textMesh.program.uniforms.uAlpha.value,
-      targetAlpha,
-      0.1
-    );
-  }
-}
+//   /** --- 2. Create text overlay --- */
+//   createText() {
+//     const { texture, width, height } = createTextTexture(
+//       this.gl,
+//       "View",
+//       "bold 60px Montserrat",
+//       "#fff"
+//     );
+
+//     const geometry = new Plane(this.gl, {
+//       width: 1,
+//       height: height / width,
+//     });
+
+//     const program = new Program(this.gl, {
+//       vertex: /* glsl */ `
+//         attribute vec3 position;
+//         attribute vec2 uv;
+//         uniform mat4 modelViewMatrix;
+//         uniform mat4 projectionMatrix;
+//         varying vec2 vUv;
+//         void main() {
+//           vUv = uv;
+//           gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+//         }
+//       `,
+//       fragment: /* glsl */ `
+//         precision highp float;
+//         uniform sampler2D tMap;
+//         uniform float uAlpha;
+//         varying vec2 vUv;
+//         void main() {
+//           vec4 color = texture2D(tMap, vUv);
+//           color.a *= uAlpha;
+//           if (color.a < 0.01) discard;
+//           gl_FragColor = color;
+//         }
+//       `,
+//       uniforms: { tMap: { value: texture }, uAlpha: { value: 0.0 } },
+//       transparent: true,
+//       depthTest: false,
+//     });
+
+//     this.textMesh = new Mesh(this.gl, { geometry, program });
+//     this.textMesh.position.y = 0;
+//     this.textMesh.position.z = 0.02;
+//     this.textMesh.setParent(this.parent);
+//   }
+
+//   /** --- 3. Update alpha (fade in/out on hover) --- */
+//   show(show: boolean) {
+//     const targetAlpha = show ? 1.0 : 0.0;
+
+//     this.blurMesh.program.uniforms.uAlpha.value = lerp(
+//       this.blurMesh.program.uniforms.uAlpha.value,
+//       targetAlpha,
+//       0.1
+//     );
+
+//     this.textMesh.program.uniforms.uAlpha.value = lerp(
+//       this.textMesh.program.uniforms.uAlpha.value,
+//       targetAlpha,
+//       0.1
+//     );
+//   }
+
+//   /** --- 4. Render pass (called from main render loop) --- */
+//   render(scene: Mesh) {
+//     // Render the current gallery image or parent to texture
+//     this.renderer.render({ scene, target: this.renderTarget });
+//     // Then render the blur + text normally
+//     this.renderer.render({ scene: this.parent });
+//   }
+// }
 
 class Media {
   extra: number = 0;
@@ -396,10 +434,10 @@ class Media {
   isHovered: boolean = false;
   baseScaleX!: number;
   baseScaleY!: number;
-  quickView!: QuickView;
-  createQuickView() {
-    this.quickView = new QuickView(this.gl, this.plane, this.renderer);
-  }
+  // quickView!: QuickView;
+  // createQuickView() {
+  //   this.quickView = new QuickView(this.gl, this.plane, this.renderer);
+  // }
 
   constructor({
     geometry,
@@ -435,7 +473,7 @@ class Media {
     this.createMesh();
     this.createTitle();
     this.onResize();
-    this.createQuickView();
+    // this.createQuickView();
   }
 
   createShader() {
@@ -953,7 +991,7 @@ class App {
         media.isHovered =
           mouseX >= minX && mouseX <= maxX && mouseY >= minY && mouseY <= maxY;
 
-        media.quickView.show(media.isHovered);
+        // media.quickView.show(media.isHovered);
 
         // Smooth scaling
         const targetScale = media.isHovered ? 1.1 : 1.0;

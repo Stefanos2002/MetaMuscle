@@ -1,6 +1,8 @@
 import CircularGallery from "./CircularGallery";
 import LightRays from "./LightRays";
 import TextType from "./TextType";
+import { HiOutlineChevronDoubleDown } from "react-icons/hi2";
+
 export default function Banner() {
   return (
     <div className="h-full relative">
@@ -37,6 +39,9 @@ export default function Banner() {
           borderRadius={0.05}
           scrollEase={0.02}
         />
+      </div>
+      <div className="inset-0 cursor-pointer m-5 flex flex-col items-center justify-end pointer-events-none absolute z-10">
+        <HiOutlineChevronDoubleDown className="text-white text-6xl pointer-events-auto" />
       </div>
     </div>
   );
