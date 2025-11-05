@@ -40,9 +40,9 @@ export default function Banner() {
           scrollEase={0.02}
         />
       </div>
-      <div className="inset-0 cursor-pointer m-5 flex flex-col items-center justify-end pointer-events-none absolute z-10">
-        <HiOutlineChevronDoubleDown className="text-white text-6xl pointer-events-auto" />
-      </div>
+      <button className="inset-0 h-10 w-10 mb-5 flex flex-col items-center justify-end absolute z-10">   
+        <HiOutlineChevronDoubleDown className="text-white text-6xl" />
+      </button>
     </div>
   );
 }
